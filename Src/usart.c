@@ -126,6 +126,8 @@ void MX_USART2_UART_Init(void)
   LL_USART_EnableDMAReq_RX(USART2);
   LL_USART_EnableDMAReq_TX(USART2);
   LL_USART_EnableIT_IDLE(USART2);
+  /* Overrun must not block reception (with ORE set, USART stops receiving new data) */
+  LL_USART_DisableOverrunDetect(USART2);
   LL_USART_Enable(USART2);
 }
 
@@ -152,6 +154,9 @@ void USART2_PutBuffer(uint8_t *buffer, uint8_t length)
 void USART2_CheckDmaReception(void)
 {
 	if(USART2_ProcessData == 0) return;
+
+	/* Clear possible reception errors so USART keeps receiving */
+	if(LL_USART_IsActiveFlag_ORE(USART2)) LL_USART_ClearFlag_ORE(USART2);
 
 	/* Current write position of DMA in the buffer */
 	uint16_t pos = DMA_USART2_BUFFER_SIZE - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_6);
